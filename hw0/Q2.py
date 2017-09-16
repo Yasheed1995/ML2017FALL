@@ -18,7 +18,8 @@ def main():
 
     im2 = Image.new(im.mode, im.size)
     im2.putdata(b)
-    im2.save("Q2.jpg")
+    im2.save("Q2.png")
 
 if __name__ == '__main__':
     main()
+
