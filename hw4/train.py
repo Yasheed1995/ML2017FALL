@@ -94,10 +94,10 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
     '''
 
     model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch,
-              steps_per_epoch=len(X_train)/n_batch,
+              steps_per_epoch=int(len(X_train)/n_batch),
               validation_data=(X_valid, y_valid),
-              validation_steps=len(X_valid)/n_batch,
-              samples_per_epoch=len(X_valid)/n_batch,
+              validation_steps=int(len(X_valid)/n_batch),
+              samples_per_epoch=X_train.shape[0],
               callbacks=callbacks_list)
 
     model.save('save/model/' + str(model_name) + '.hdf5')
@@ -120,11 +120,11 @@ def build_model_1():
     model = Sequential()
     model.add(Embedding(160000, 128, input_length=250))
     model.add(Conv1D(128, 5, activation='relu'))
-    model.add(MaxPooling1D(5))
+    model.add(MaxPooling1D(3))
     model.add(Conv1D(128, 5, activation='relu'))
-    model.add(MaxPooling1D(5))
+    model.add(MaxPooling1D(3))
     model.add(Conv1D(128, 5, activation='relu'))
-    model.add(MaxPooling1D(35))
+    model.add(MaxPooling1D(10))
     model.add(Flatten())
     model.add(Dense(2, activation='softmax'))
 
