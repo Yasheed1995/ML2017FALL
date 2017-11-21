@@ -103,7 +103,7 @@ def build_model_0():
     model = Sequential()
     model.add(Embedding(160000, 64, input_length=1000))
     model.add(Flatten())
-    model.add(Dense(1, activation='sigmoid'))
+    model.add(Dense(2, activation='softmax'))
 
     model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
