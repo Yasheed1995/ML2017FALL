@@ -34,7 +34,7 @@ if __name__ == '__main__':
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
 
-    data = pad_sequences(sequences, maxlen=1000)
+    data = pad_sequences(sequences, maxlen=250)
 
     labels = np_utils.to_categorical(np.asarray(labels))
     print('Shape of data tensor:', data.shape)
