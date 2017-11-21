@@ -93,11 +93,12 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
                     callbacks=callbacks_list)
     '''
 
-    model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch,
+    history = model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch,
               validation_data=(X_valid, y_valid),
               callbacks=callbacks_list)
 
     model.save('save/model/' + str(model_name) + '.hdf5')
+
 
     score = model.evaluate(X_valid, y_valid)
     print ('\nTest Acc:', score[1])
@@ -116,11 +117,11 @@ def build_model_0():
 def build_model_1():
     model = Sequential()
     model.add(Embedding(160000, 128, input_length=250))
-    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(Conv1D(128, 5, activation='sigmoid'))
     model.add(MaxPooling1D(3))
-    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(Conv1D(128, 5, activation='sigmoid'))
     model.add(MaxPooling1D(3))
-    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(Conv1D(128, 5, activation='sigmoid'))
     model.add(MaxPooling1D(10))
     model.add(Flatten())
     model.add(Dense(2, activation='softmax'))
