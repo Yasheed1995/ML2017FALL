@@ -77,9 +77,9 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
         model = load_model(model_name)
 
     filepath='save/Model.{epoch:02d}-{val_acc:.4f}.hdf5'
-    checkpoint1 = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-    checkpoint2 = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
-    callbacks_list = [checkpoint1,checkpoint2]
+    #checkpoint1 = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
+    #checkpoint2 = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
+    #callbacks_list = [checkpoint1,checkpoint2]
 
     '''
     model.fit_generator(datagen_train.flow(X_train, y_train,
@@ -93,7 +93,7 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
                     callbacks=callbacks_list)
     '''
 
-    model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch, callbacks=callbacks_list)
+    model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch)
     model.save('save/model/' + str(model_name) + '.hdf5')
 
     score = model.evaluate(X_valid, y_valid)
@@ -105,7 +105,7 @@ def build_model_0():
     model.add(Flatten())
     model.add(Dense(2, activation='softmax'))
 
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['val_acc'])
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 
     return model
