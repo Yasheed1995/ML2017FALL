@@ -94,10 +94,7 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
     '''
 
     model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch,
-              steps_per_epoch=int(len(X_train)/n_batch),
               validation_data=(X_valid, y_valid),
-              validation_steps=int(len(X_valid)/n_batch),
-              samples_per_epoch=X_train.shape[0],
               callbacks=callbacks_list)
 
     model.save('save/model/' + str(model_name) + '.hdf5')
