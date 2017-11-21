@@ -14,8 +14,8 @@ from keras.utils                import np_utils
 from keras                      import regularizers
 from keras.preprocessing.image  import ImageDataGenerator
 from keras.layers               import Dense, Dropout, Activation, Flatten
-from keras.layers               import Convolution2D, Conv2D, AveragePooling2D
-from keras.layers               import ZeroPadding2D, MaxPooling2D
+from keras.layers               import Convolution1D, Conv1D, AveragePooling1D
+from keras.layers               import MaxPooling1D
 from keras.layers.embeddings    import Embedding
 from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
@@ -69,8 +69,8 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
     if pretrain == False:
         if which_model == 0:
             model = build_model_0()
-        #elif which_model == 1:
-        #    model = build_model_1()
+        elif which_model == 1:
+            model = build_model_1()
         #elif which_model == 2:
         #    model = build_model_2()
     else:
@@ -110,6 +110,25 @@ def build_model_0():
 
     return model
 
+def build_model_1():
+    model = Sequential()
+    model.add(Embedding(160000, 128, input_length=1000))
+    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(MaxPooling1D(5))
+    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(MaxPooling1D(5))
+    model.add(Conv1D(128, 5, activation='relu'))
+    model.add(MaxPooling1D(35))
+    model.add(Flatten())
+    model.add(Dense(2, activation='softmax'))
+
+
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.summary()
+
+    return model
+
 if __name__ == '__main__':
     main()
+
 
