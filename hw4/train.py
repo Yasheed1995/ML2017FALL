@@ -105,7 +105,7 @@ def build_model_0():
     model.add(Flatten())
     model.add(Dense(2, activation='softmax'))
 
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['val_acc'])
     model.summary()
 
     return model
