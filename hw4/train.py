@@ -101,7 +101,7 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
 
 def build_model_0():
     model = Sequential()
-    model.add(Embedding(160000, 64))
+    model.add(Embedding(160000, 64, input_length=1000))
     model.add(Flatten())
     model.add(Dense(64, activation='sigmoid'))
 
@@ -112,3 +112,4 @@ def build_model_0():
 
 if __name__ == '__main__':
     main()
+
