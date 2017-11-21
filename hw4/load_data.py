@@ -19,7 +19,7 @@ if __name__ == '__main__':
     texts_labels = {}
     with open('data/training_label.txt', 'r') as f:
         buffer_ = f.read()
-        print len(buffer_.split('\n'))
+        print(len(buffer_.split('\n')))
         for line in buffer_.split('\n'):
             if line == "":
                 break
@@ -51,10 +51,10 @@ if __name__ == '__main__':
     X_valid = data[-nb_validation_samples:]
     y_valid = labels[-nb_validation_samples:]
 
-    print len(X_train)
-    print len(y_train)
-    print len(X_valid)
-    print len(y_valid)
+    print(len(X_train))
+    print(len(y_train))
+    print(len(X_valid))
+    print(len(y_valid))
     with h5py.File('data/data.h5', 'w') as hf:
         hf.create_dataset('X_train', data=X_train)
         hf.create_dataset('y_train', data=y_train)
