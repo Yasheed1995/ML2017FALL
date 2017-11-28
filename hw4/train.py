@@ -56,7 +56,35 @@ def main():
         args.model_name
     )
 
+def prepare_embedding():
+    embeddings_index = {}
+    glove_files = []
+    glove_files.append(open('data/glove.6B/glove1.txt', 'r'))
+    glove_files.append(open('data/glove.6B/glove2.txt', 'r'))
+    glove_files.append(open('data/glove.6B/glove3.txt', 'r'))
+    glove_files.append(open('data/glove.6B/glove4.txt', 'r'))
+    for f in glove_files:
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        f.close()
 
+    print ("found %s word vectors." % len(embeddings_index))
+
+    embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
+    for word, i in word_index.items():
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            embedding_matrix[i] = embedding_vector
+
+    embedding_layer = Embedding(len(word_index) + 1,
+                                    EMBEDDING_DIM,
+                                    weights=[embedding_matrix],
+                                    input_length=MAX_SEQUENCE_LENGTH,
+                                    trainable=False)
+    return embedding_layer
 def load_data():
     with h5py.File('data/data.h5', 'r') as hf:
         X_train = hf['X_train'][:]
@@ -143,32 +171,4 @@ if __name__ == '__main__':
     main()
 
 
-def prepare_embedding():
-    embeddings_index = {}
-    glove_files = []
-    glove_files.append(open('data/glove.6B/glove1.txt', 'r'))
-    glove_files.append(open('data/glove.6B/glove2.txt', 'r'))
-    glove_files.append(open('data/glove.6B/glove3.txt', 'r'))
-    glove_files.append(open('data/glove.6B/glove4.txt', 'r'))
-    for f in glove_files:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
-        f.close()
 
-    print ("found %s word vectors." % len(embeddings_index))
-
-    embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
-    for word, i in word_index.items():
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            embedding_matrix[i] = embedding_vector
-
-    embedding_layer = Embedding(len(word_index) + 1,
-                                    EMBEDDING_DIM,
-                                    weights=[embedding_matrix],
-                                    input_length=MAX_SEQUENCE_LENGTH,
-                                    trainable=False)
-    return embedding_layer
