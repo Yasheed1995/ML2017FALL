@@ -108,7 +108,9 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
 
 def build_model_0():
     model = Sequential()
-    model.add(Embedding(160000, 64, input_length=250))
+    embedding_layer = prepare_embedding()
+    model.add(embedding_layer)
+    #model.add(Embedding(160000, 64, input_length=MAX_SEQUENCE_LENGTH))
     model.add(Flatten())
     model.add(Dense(2, activation='softmax'))
 
