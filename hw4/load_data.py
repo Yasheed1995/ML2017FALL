@@ -11,6 +11,8 @@ import pandas as pd
 import h5py
 
 VALIDATION_SPLIT = 0.2
+MAX_NB_WORDS = 10000
+MAX_SEQUENCE_LENGTH = 250
 
 if __name__ == '__main__':
     buffer_ = []
@@ -27,14 +29,14 @@ if __name__ == '__main__':
             labels.append(line[0])
         #print np.array(texts)
         #print np.array(labels)
-    tokenizer = Tokenizer(10000)
+    tokenizer = Tokenizer(MAX_NB_WORDS)
     tokenizer.fit_on_texts(texts)
     sequences = tokenizer.texts_to_sequences(texts)
 
     word_index = tokenizer.word_index
     print('Found %s unique tokens.' % len(word_index))
 
-    data = pad_sequences(sequences, maxlen=250)
+    data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
 
     labels = np_utils.to_categorical(np.asarray(labels))
     print('Shape of data tensor:', data.shape)

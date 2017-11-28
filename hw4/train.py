@@ -19,6 +19,9 @@ from keras.layers               import MaxPooling1D
 from keras.layers.embeddings    import Embedding
 from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
+MAX_SEQUENCE_LENGTH = 250
+EMBEDDING_DIM = 3
+
 def main():
     parser = argparse.ArgumentParser(prog='train.py')
     parser.add_argument('--epoch', type=int, default=30)
@@ -116,7 +119,9 @@ def build_model_0():
 
 def build_model_1():
     model = Sequential()
-    model.add(Embedding(160000, 128, input_length=250))
+    embedding_layer = prepare_embedding()
+    model.add(embedding_layer)
+    #model.add(Embedding(160000, 128, input_length=250))
     model.add(Conv1D(128, 5, activation='sigmoid'))
     model.add(MaxPooling1D(3))
     model.add(Conv1D(128, 5, activation='sigmoid'))
@@ -136,3 +141,32 @@ if __name__ == '__main__':
     main()
 
 
+def prepare_embedding():
+    embeddings_index = {}
+    glove_files = []
+    glove_files.append(open('data/glove.6B/glove1.txt', 'r'))
+    glove_files.append(open('data/glove.6B/glove2.txt', 'r'))
+    glove_files.append(open('data/glove.6B/glove3.txt', 'r'))
+    glove_files.append(open('data/glove.6B/glove4.txt', 'r'))
+    for f in glove_files:
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        f.close()
+
+    print ("found %s word vectors." % len(embeddings_index))
+
+    embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
+    for word, i in word_index.items():
+        embedding_vector = embeddings_index.get(word)
+        if embedding_vector is not None:
+            embedding_matrix[i] = embedding_vector
+
+    embedding_layer = Embedding(len(word_index) + 1,
+                                    EMBEDDING_DIM,
+                                    weights=[embedding_matrix],
+                                    input_length=MAX_SEQUENCE_LENGTH,
+                                    trainable=False)
+    return embedding_layer
