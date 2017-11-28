@@ -11,8 +11,8 @@ import pandas as pd
 import h5py
 
 VALIDATION_SPLIT = 0.2
-MAX_NB_WORDS = 10000
-MAX_SEQUENCE_LENGTH = 250
+MAX_NB_WORDS = 100000
+MAX_SEQUENCE_LENGTH = 1000
 
 if __name__ == '__main__':
     buffer_ = []

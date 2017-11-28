@@ -19,8 +19,8 @@ from keras.layers               import MaxPooling1D
 from keras.layers.embeddings    import Embedding
 from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
-MAX_SEQUENCE_LENGTH = 250
-EMBEDDING_DIM = 3
+MAX_SEQUENCE_LENGTH = 1000
+EMBEDDING_DIM = 4
 
 def main():
     parser = argparse.ArgumentParser(prog='train.py')
