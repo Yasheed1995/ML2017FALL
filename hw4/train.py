@@ -16,7 +16,9 @@ from keras.preprocessing.image  import ImageDataGenerator
 from keras.layers               import Dense, Dropout, Activation, Flatten
 from keras.layers               import Convolution1D, Conv1D, AveragePooling1D
 from keras.layers               import MaxPooling1D
+from keras.layers               import LSTM
 from keras.layers.embeddings    import Embedding
+from keras.preprocessing        import sequence
 from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
 MAX_SEQUENCE_LENGTH = 1000
@@ -30,7 +32,7 @@ def main():
     parser.add_argument('--model_name', type=str, default='save/model/model-1')
     parser.add_argument('--which_model', type=int, default=0)
     parser.add_argument('--which_gpu', type=int, default=0)
-    parser.add_argument('--gpu_fraction', type=float, default=1.0)
+    parser.add_argument('--gpu_fraction', type=float, default=0.9)
 
     args = parser.parse_args()
 
@@ -63,13 +65,17 @@ def prepare_embedding():
     glove_files.append(open('data/glove.6B/glove2.txt', 'r'))
     glove_files.append(open('data/glove.6B/glove3.txt', 'r'))
     glove_files.append(open('data/glove.6B/glove4.txt', 'r'))
-    for f in glove_files:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
-        f.close()
+    try:
+        for f in glove_files:
+            for line in f:
+                values = line.split()
+                word = values[0]
+
+                coefs = np.asarray(values[1:], dtype='float32')
+                embeddings_index[word] = coefs
+            f.close()
+    except ValueError:
+        pass
 
     print ("found %s word vectors." % len(embeddings_index))
 
@@ -136,7 +142,7 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
 
 def build_model_0():
     model = Sequential()
-    embedding_layer = prepare_embedding()
+    embedding_layer = Embedding(82203, 50, input_length=30)
     model.add(embedding_layer)
     #model.add(Embedding(160000, 64, input_length=MAX_SEQUENCE_LENGTH))
     model.add(Flatten())
