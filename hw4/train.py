@@ -231,7 +231,7 @@ def build_model_1(embedding_layer):
 
 def build_model_2():
 	model = Sequential()
-	model.add(Embedding(input_dim, 300, input_length = MAX_SEQUENCE_LENGTH))
+	model.add(Embedding(MAX_NB_WORDS, 300, input_length = MAX_SEQUENCE_LENGTH))
 	model.add(Conv1D(filters = 32, kernel_size = 3, padding = 'same', activation = 'relu'))
 	model.add(LSTM(128, dropout = 0.2, recurrent_dropout = 0.2))
 	model.add(Dense(1, activation = 'sigmoid'))
