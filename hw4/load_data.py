@@ -1,5 +1,5 @@
 __author__ = 'b04901025'
-# File script.py
+
 import os
 import sys
 import numpy as np
@@ -10,7 +10,7 @@ from keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 import h5py
 
-MAX_SEQUENCE_LENGTH = 1000
+MAX_SEQUENCE_LENGTH = 50
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2

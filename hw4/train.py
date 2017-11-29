@@ -7,6 +7,15 @@ import os
 import argparse
 import keras
 import h5py
+import os
+import sys
+import numpy as np
+import keras
+from keras.utils import np_utils
+from keras.preprocessing.text import Tokenizer
+from keras.preprocessing.sequence import pad_sequences
+import pandas as pd
+import h5py
 from keras.models               import Sequential, load_model
 from keras.layers.normalization import BatchNormalization
 from keras.optimizers           import Adam, Adadelta
@@ -21,7 +30,7 @@ from keras.layers.embeddings    import Embedding
 from keras.preprocessing        import sequence
 from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
-MAX_SEQUENCE_LENGTH = 1000
+MAX_SEQUENCE_LENGTH = 50
 MAX_NB_WORDS = 20000
 EMBEDDING_DIM = 100
 VALIDATION_SPLIT = 0.2
@@ -29,10 +38,10 @@ VALIDATION_SPLIT = 0.2
 def main():
     parser = argparse.ArgumentParser(prog='train.py')
     parser.add_argument('--epoch', type=int, default=30)
-    parser.add_argument('--batch', type=int, default=512)
+    parser.add_argument('--batch', type=int, default=256)
     parser.add_argument('--pretrain', type=bool, default=False)
     parser.add_argument('--model_name', type=str, default='save/model/model-1')
-    parser.add_argument('--which_model', type=int, default=0)
+    parser.add_argument('--which_model', type=int, default=1)
     parser.add_argument('--which_gpu', type=int, default=0)
     parser.add_argument('--gpu_fraction', type=float, default=0.9)
 
@@ -46,7 +55,7 @@ def main():
     config.gpu_options.per_process_gpu_memory_fraction = args.gpu_fraction
     set_session(tf.Session(config=config))
 
-    (X_train, y_train), (X_valid, y_valid), word_index = load_data()
+    (X_train, y_train), (X_valid, y_valid), embedding_layer = load_data()
 
     train(
         args.which_model,
@@ -58,7 +67,7 @@ def main():
         args.epoch,
         args.pretrain,
         args.model_name,
-        word_index
+        embedding_layer
     )
 
 def prepare_embedding(word_index):
@@ -101,23 +110,56 @@ def prepare_embedding(word_index):
 #print('Training model.')
     return embedding_layer
 def load_data():
-    with h5py.File('data/data.h5', 'r') as hf:
-        X_train     =   hf['X_train'][:]
-        y_train     =   hf['y_train'][:]
-        X_valid     =   hf['X_valid'][:]
-        y_valid     =   hf['y_valid'][:]
-        word_index  =   hf['word_index'][:]
+        buffer_ = []
+        texts = []
+        labels = []
+        texts_labels = {}
+        with open('data/training_label.txt', 'r') as f:
+            buffer_ = f.read()
+            print(len(buffer_.split('\n')))
+            for line in buffer_.split('\n'):
+                if line == "":
+                    break
+                texts.append(line[10:])
+                labels.append(line[0])
+            #print np.array(texts)
+            #print np.array(labels)
+        tokenizer = Tokenizer(MAX_NB_WORDS)
+        tokenizer.fit_on_texts(texts)
+        sequences = tokenizer.texts_to_sequences(texts)
 
-    return (X_train, y_train), (X_valid, y_valid), word_index
+        word_index = tokenizer.word_index
+        print('Found %s unique tokens.' % len(word_index))
+
+        data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
+
+        labels = np_utils.to_categorical(np.asarray(labels))
+        print('Shape of data tensor:', data.shape)
+        print('Shape of label tensor:', labels.shape)
+
+        indices = np.arange(data.shape[0])
+        np.random.shuffle(indices)
+        data = data[indices]
+        labels = labels[indices]
+        nb_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
+
+        X_train = data[:-nb_validation_samples]
+        y_train = labels[:-nb_validation_samples]
+        X_valid = data[-nb_validation_samples:]
+        y_valid = labels[-nb_validation_samples:]
+        
+        embedding_layer = prepare_embedding(word_index)
+        
+        return (X_train, y_train), (X_valid, y_valid), embedding_layer
 
 def train(which_model, X_train, y_train, X_valid, y_valid,
-         n_batch, n_epoch, pretrain, model_name, word_index):
+         n_batch, n_epoch, pretrain, model_name, embedding_layer):
 
     if pretrain == False:
         if which_model == 0:
-            model = build_model_0(word_index)
+            model = build_model_0(embedding_layer)
         elif which_model == 1:
-            model = build_model_1(word_index)
+            model = build_model_1(embedding_layer)
         #elif which_model == 2:
         #    model = build_model_2()
     else:
@@ -150,9 +192,9 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
     score = model.evaluate(X_valid, y_valid)
     print ('\nTest Acc:', score[1])
 
-def build_model_0(word_index):
+def build_model_0(embedding_layer):
     model = Sequential()
-    embedding_layer = prepare_embedding(word_index)
+    #embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
     #model.add(Embedding(160000, 64, input_length=MAX_SEQUENCE_LENGTH))
     model.add(Flatten())
@@ -163,18 +205,21 @@ def build_model_0(word_index):
 
     return model
 
-def build_model_1():
-    model = Sequential(word_index)
-    embedding_layer = prepare_embedding(word_index)
+def build_model_1(embedding_layer):
+    model = Sequential()
+    #embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
-    #model.add(Embedding(160000, 128, input_length=250))
-    model.add(Conv1D(128, 5, activation='sigmoid'))
-    model.add(MaxPooling1D(3))
-    model.add(Conv1D(128, 5, activation='sigmoid'))
-    model.add(MaxPooling1D(3))
-    model.add(Conv1D(128, 5, activation='sigmoid'))
-    model.add(MaxPooling1D(10))
-    model.add(Flatten())
+    model.add(LSTM(100))
+    #model.add(Conv1D(128, 5, activation='sigmoid'))
+    #model.add(MaxPooling1D(5))
+    #model.add(Conv1D(128, 5, activation='sigmoid'))
+    
+    #model.add(MaxPooling1D(5))
+    #model.add(Conv1D(128, 5, activation='sigmoid'))
+    #model.add(MaxPooling1D(1))
+    
+    #model.add(Flatten())
+    
     model.add(Dense(2, activation='softmax'))
 
 
