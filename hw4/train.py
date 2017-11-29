@@ -160,8 +160,8 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
             model = build_model_0(embedding_layer)
         elif which_model == 1:
             model = build_model_1(embedding_layer)
-        #elif which_model == 2:
-        #    model = build_model_2()
+        elif which_model == 2:
+            model = build_model_2()
     else:
         model = load_model(model_name)
 
@@ -229,6 +229,15 @@ def build_model_1(embedding_layer):
 
     return model
 
+def build_model_2():
+	model = Sequential()
+	model.add(Embedding(input_dim, 300, input_length = MAX_SEQUENCE_LENGTH))
+	model.add(Conv1D(filters = 32, kernel_size = 3, padding = 'same', activation = 'relu'))
+	model.add(LSTM(128, dropout = 0.2, recurrent_dropout = 0.2))
+	model.add(Dense(1, activation = 'sigmoid'))
+
+	model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['acc'])
+	return model
 if __name__ == '__main__':
     main()
 
