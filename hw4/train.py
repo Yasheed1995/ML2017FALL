@@ -147,9 +147,9 @@ def load_data():
         y_train = labels[:-nb_validation_samples]
         X_valid = data[-nb_validation_samples:]
         y_valid = labels[-nb_validation_samples:]
-        
+
         embedding_layer = prepare_embedding(word_index)
-        
+
         return (X_train, y_train), (X_valid, y_valid), embedding_layer
 
 def train(which_model, X_train, y_train, X_valid, y_valid,
@@ -213,13 +213,14 @@ def build_model_1(embedding_layer):
     #model.add(Conv1D(128, 5, activation='sigmoid'))
     #model.add(MaxPooling1D(5))
     #model.add(Conv1D(128, 5, activation='sigmoid'))
-    
+
     #model.add(MaxPooling1D(5))
     #model.add(Conv1D(128, 5, activation='sigmoid'))
     #model.add(MaxPooling1D(1))
-    
+
     #model.add(Flatten())
-    
+    model.add(Dropout(0.5))
+
     model.add(Dense(2, activation='softmax'))
 
 
