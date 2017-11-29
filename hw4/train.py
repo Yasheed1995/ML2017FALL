@@ -79,6 +79,8 @@ def prepare_embedding():
 
     print ("found %s word vectors." % len(embeddings_index))
 
+    word_index = 82203
+
     embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
     for word, i in word_index.items():
         embedding_vector = embeddings_index.get(word)
