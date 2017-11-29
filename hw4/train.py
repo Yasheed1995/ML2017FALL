@@ -209,7 +209,7 @@ def build_model_1(embedding_layer):
     model = Sequential()
     #embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
-    model.add(LSTM(100))
+    model.add(LSTM(256))
     #model.add(Conv1D(128, 5, activation='sigmoid'))
     #model.add(MaxPooling1D(5))
     #model.add(Conv1D(128, 5, activation='sigmoid'))
