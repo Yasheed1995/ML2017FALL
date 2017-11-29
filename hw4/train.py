@@ -167,7 +167,7 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
 
     filepath='save/Model.{epoch:02d}-{val_acc:.4f}.hdf5'
     checkpoint1 = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-    checkpoint2 = EarlyStopping(monitor='val_loss', min_delta=0, patience=20, verbose=0, mode='auto')
+    checkpoint2 = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
     callbacks_list = [checkpoint1,checkpoint2]
 
     '''
