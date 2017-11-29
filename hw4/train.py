@@ -22,7 +22,9 @@ from keras.preprocessing        import sequence
 from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
 MAX_SEQUENCE_LENGTH = 1000
-EMBEDDING_DIM = 4
+MAX_NB_WORDS = 20000
+EMBEDDING_DIM = 100
+VALIDATION_SPLIT = 0.2
 
 def main():
     parser = argparse.ArgumentParser(prog='train.py')
@@ -44,7 +46,7 @@ def main():
     config.gpu_options.per_process_gpu_memory_fraction = args.gpu_fraction
     set_session(tf.Session(config=config))
 
-    (X_train, y_train), (X_valid, y_valid) = load_data()
+    (X_train, y_train), (X_valid, y_valid), word_index = load_data()
 
     train(
         args.which_model,
@@ -55,61 +57,67 @@ def main():
         args.batch,
         args.epoch,
         args.pretrain,
-        args.model_name
+        args.model_name,
+        word_index
     )
 
-def prepare_embedding():
+def prepare_embedding(word_index):
     embeddings_index = {}
-    glove_files = []
-    glove_files.append(open('data/glove.6B/glove1.txt', 'r'))
-    glove_files.append(open('data/glove.6B/glove2.txt', 'r'))
-    glove_files.append(open('data/glove.6B/glove3.txt', 'r'))
-    glove_files.append(open('data/glove.6B/glove4.txt', 'r'))
-    try:
-        for f in glove_files:
-            for line in f:
-                values = line.split()
-                word = values[0]
+    files = []
+    files.append(open('data/glove.6B/glove1.txt', 'r'))
+    files.append(open('data/glove.6B/glove2.txt', 'r'))
+    files.append(open('data/glove.6B/glove3.txt', 'r'))
+    files.append(open('data/glove.6B/glove4.txt', 'r'))
 
-                coefs = np.asarray(values[1:], dtype='float32')
-                embeddings_index[word] = coefs
-            f.close()
-    except ValueError:
-        pass
+    for f in files:
+        for line in f:
+            values = line.split()
+            word = values[0]
+            coefs = np.asarray(values[1:], dtype='float32')
+            embeddings_index[word] = coefs
+        f.close()
 
-    print ("found %s word vectors." % len(embeddings_index))
+    print('Found %s word vectors.' % len(embeddings_index))
 
-    word_index = 82203
-
-    embedding_matrix = np.zeros((len(word_index) + 1, EMBEDDING_DIM))
+    # prepare embedding matrix
+    num_words = min(MAX_NB_WORDS, len(word_index))
+    embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
     for word, i in word_index.items():
+        if i >= MAX_NB_WORDS:
+            continue
         embedding_vector = embeddings_index.get(word)
         if embedding_vector is not None:
+            # words not found in embedding index will be all-zeros.
             embedding_matrix[i] = embedding_vector
 
-    embedding_layer = Embedding(len(word_index) + 1,
-                                    EMBEDDING_DIM,
-                                    weights=[embedding_matrix],
-                                    input_length=MAX_SEQUENCE_LENGTH,
-                                    trainable=False)
+    # load pre-trained word embeddings into an Embedding layer
+    # note that we set trainable = False so as to keep the embeddings fixed
+    embedding_layer = Embedding(num_words,
+                            EMBEDDING_DIM,
+                            weights=[embedding_matrix],
+                            input_length=MAX_SEQUENCE_LENGTH,
+                            trainable=False)
+
+#print('Training model.')
     return embedding_layer
 def load_data():
     with h5py.File('data/data.h5', 'r') as hf:
-        X_train = hf['X_train'][:]
-        y_train = hf['y_train'][:]
-        X_valid = hf['X_valid'][:]
-        y_valid = hf['y_valid'][:]
+        X_train     =   hf['X_train'][:]
+        y_train     =   hf['y_train'][:]
+        X_valid     =   hf['X_valid'][:]
+        y_valid     =   hf['y_valid'][:]
+        word_index  =   hf['word_index'][:]
 
-    return (X_train, y_train), (X_valid, y_valid)
+    return (X_train, y_train), (X_valid, y_valid), word_index
 
 def train(which_model, X_train, y_train, X_valid, y_valid,
-         n_batch, n_epoch, pretrain, model_name):
+         n_batch, n_epoch, pretrain, model_name, word_index):
 
     if pretrain == False:
         if which_model == 0:
-            model = build_model_0()
+            model = build_model_0(word_index)
         elif which_model == 1:
-            model = build_model_1()
+            model = build_model_1(word_index)
         #elif which_model == 2:
         #    model = build_model_2()
     else:
@@ -142,9 +150,9 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
     score = model.evaluate(X_valid, y_valid)
     print ('\nTest Acc:', score[1])
 
-def build_model_0():
+def build_model_0(word_index):
     model = Sequential()
-    embedding_layer = Embedding(82203, 50, input_length=30)
+    embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
     #model.add(Embedding(160000, 64, input_length=MAX_SEQUENCE_LENGTH))
     model.add(Flatten())
@@ -156,8 +164,8 @@ def build_model_0():
     return model
 
 def build_model_1():
-    model = Sequential()
-    embedding_layer = prepare_embedding()
+    model = Sequential(word_index)
+    embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
     #model.add(Embedding(160000, 128, input_length=250))
     model.add(Conv1D(128, 5, activation='sigmoid'))

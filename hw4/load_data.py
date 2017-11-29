@@ -10,9 +10,10 @@ from keras.preprocessing.sequence import pad_sequences
 import pandas as pd
 import h5py
 
-VALIDATION_SPLIT = 0.2
-MAX_NB_WORDS = 100000
 MAX_SEQUENCE_LENGTH = 1000
+MAX_NB_WORDS = 20000
+EMBEDDING_DIM = 100
+VALIDATION_SPLIT = 0.2
 
 if __name__ == '__main__':
     buffer_ = []
@@ -62,4 +63,5 @@ if __name__ == '__main__':
         hf.create_dataset('y_train', data=y_train)
         hf.create_dataset('X_valid', data=X_valid)
         hf.create_dataset('y_valid', data=y_valid)
+        hf.create_dataset('word_index', data=word_index)
         hf.close()
