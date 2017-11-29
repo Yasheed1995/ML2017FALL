@@ -234,7 +234,7 @@ def build_model_2():
 	model.add(Embedding(MAX_NB_WORDS, 300, input_length = MAX_SEQUENCE_LENGTH))
 	model.add(Conv1D(filters = 32, kernel_size = 3, padding = 'same', activation = 'relu'))
 	model.add(LSTM(128, dropout = 0.2, recurrent_dropout = 0.2))
-	model.add(Dense(1, activation = 'sigmoid'))
+	model.add(Dense(2, activation = 'softmax'))
 
 	model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['acc'])
 	return model
