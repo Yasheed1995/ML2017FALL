@@ -37,7 +37,7 @@ VALIDATION_SPLIT = 0.2
 
 def main():
     parser = argparse.ArgumentParser(prog='train.py')
-    parser.add_argument('--epoch', type=int, default=30)
+    parser.add_argument('--epoch', type=int, default=5)
     parser.add_argument('--batch', type=int, default=256)
     parser.add_argument('--pretrain', type=bool, default=False)
     parser.add_argument('--model_name', type=str, default='save/model/model-1')
@@ -169,18 +169,6 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
     checkpoint1 = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
     checkpoint2 = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
     callbacks_list = [checkpoint1,checkpoint2]
-
-    '''
-    model.fit_generator(datagen_train.flow(X_train, y_train,
-                    batch_size=n_batch),
-                    epochs=n_epoch,
-                    steps_per_epoch=len(X_train)/n_batch,
-                    validation_data=datagen_test.flow(X_valid, y_valid,
-                        batch_size=n_batch),
-                    validation_steps=len(X_valid)/n_batch,
-                    samples_per_epoch=X_train.shape[0],
-                    callbacks=callbacks_list)
-    '''
 
     history = model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch,
               validation_data=(X_valid, y_valid),
