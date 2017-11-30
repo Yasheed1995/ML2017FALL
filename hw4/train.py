@@ -175,51 +175,38 @@ def train(which_model, X_train, y_train, X_valid, y_valid,
               callbacks=callbacks_list)
 
     model.save('save/model/' + str(model_name) + '.hdf5')
-
-
     score = model.evaluate(X_valid, y_valid)
     print ('\nTest Acc:', score[1])
 
 def build_model_0(embedding_layer):
     model = Sequential()
-    #embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
-    #model.add(Embedding(160000, 64, input_length=MAX_SEQUENCE_LENGTH))
     model.add(Flatten())
     model.add(Dense(2, activation='softmax'))
 
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
 
     return model
 
 def build_model_1(embedding_layer):
     model = Sequential()
-    #embedding_layer = prepare_embedding(word_index)
     model.add(embedding_layer)
     model.add(LSTM(256))
-    #model.add(Conv1D(128, 5, activation='sigmoid'))
-    #model.add(MaxPooling1D(5))
-    #model.add(Conv1D(128, 5, activation='sigmoid'))
-
-    #model.add(MaxPooling1D(5))
-    #model.add(Conv1D(128, 5, activation='sigmoid'))
-    #model.add(MaxPooling1D(1))
-
-    #model.add(Flatten())
+    
     model.add(Dropout(0.5))
 
     model.add(Dense(2, activation='softmax'))
 
 
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
     model.summary()
 
     return model
 
 def build_model_2():
 	model = Sequential()
-	model.add(Embedding(MAX_NB_WORDS, 300, input_length = MAX_SEQUENCE_LENGTH))
+	model.add(Embedding(MAX_NB_WORDS, 50, input_length = MAX_SEQUENCE_LENGTH))
 	model.add(Conv1D(filters = 32, kernel_size = 3, padding = 'same', activation = 'relu'))
 	model.add(LSTM(128, dropout = 0.2, recurrent_dropout = 0.2))
 	model.add(Dense(2, activation = 'softmax'))
