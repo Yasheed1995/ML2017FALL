@@ -1,220 +1,207 @@
-# -*- coding: utf-8 -*-
-__author__ = 'b04901025'
-# File train.py
-import tensorflow   as tf
-import numpy        as np
-import os
-import argparse
+import sys, argparse, os
 import keras
-import h5py
-import os
-import sys
+import _pickle as pk
+import readline
 import numpy as np
-import keras
-from keras.utils import np_utils
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-import pandas as pd
-import h5py
-from keras.models               import Sequential, load_model
-from keras.layers.normalization import BatchNormalization
-from keras.optimizers           import Adam, Adadelta
-from keras.utils                import np_utils
-from keras                      import regularizers
-from keras.preprocessing.image  import ImageDataGenerator
-from keras.layers               import Dense, Dropout, Activation, Flatten
-from keras.layers               import Convolution1D, Conv1D, AveragePooling1D
-from keras.layers               import MaxPooling1D
-from keras.layers               import LSTM
-from keras.layers.embeddings    import Embedding
-from keras.preprocessing        import sequence
-from keras.callbacks            import ModelCheckpoint,EarlyStopping
 
-MAX_SEQUENCE_LENGTH = 50
-MAX_NB_WORDS = 20000
-EMBEDDING_DIM = 100
-VALIDATION_SPLIT = 0.2
+from keras import regularizers
+from keras.models import Model
+from keras.layers import Input, GRU, LSTM, Dense, Dropout, Bidirectional
+from keras.layers.embeddings import Embedding
+from keras.optimizers import Adam
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+
+import keras.backend.tensorflow_backend as K
+import tensorflow as tf
+
+from utils.util import DataManager
+
+
+parser = argparse.ArgumentParser(description='Sentiment classification')
+parser.add_argument('model')
+parser.add_argument('action', choices=['train','test','semi'])
+
+# training argument
+parser.add_argument('--batch_size', default=128, type=float)
+parser.add_argument('--nb_epoch', default=20, type=int)
+parser.add_argument('--val_ratio', default=0.1, type=float)
+parser.add_argument('--gpu_fraction', default=0.3, type=float)
+parser.add_argument('--vocab_size', default=20000, type=int)
+parser.add_argument('--max_length', default=40,type=int)
+
+# model parameter
+parser.add_argument('--loss_function', default='binary_crossentropy')
+parser.add_argument('--cell', default='LSTM', choices=['LSTM','GRU'])
+parser.add_argument('-emb_dim', '--embedding_dim', default=128, type=int)
+parser.add_argument('-hid_siz', '--hidden_size', default=512, type=int)
+parser.add_argument('--dropout_rate', default=0.3, type=float)
+parser.add_argument('-lr','--learning_rate', default=0.001,type=float)
+parser.add_argument('--threshold', default=0.1,type=float)
+
+# output path for your prediction
+parser.add_argument('--result_path', default='result.csv',)
+
+# put model in the same directory
+parser.add_argument('--load_model', default = None)
+parser.add_argument('--save_dir', default = 'model/')
+args = parser.parse_args()
+
+train_path = 'data/training_label.txt'
+test_path = 'data/testing_data.txt'
+semi_path = 'data/training_nolabel.txt'
+
+# build model
+def simpleRNN(args):
+    inputs = Input(shape=(args.max_length,))
+
+    # Embedding layer
+    embedding_inputs = Embedding(args.vocab_size,
+                                 args.embedding_dim,
+                                 trainable=True)(inputs)
+    # RNN
+    return_sequence = False
+    dropout_rate = args.dropout_rate
+    if args.cell == 'GRU':
+        RNN_cell = GRU(args.hidden_size,
+                       return_sequences=return_sequence,
+                       dropout=dropout_rate)
+    elif args.cell == 'LSTM':
+        RNN_cell = LSTM(args.hidden_size,
+                        return_sequences=return_sequence,
+                        dropout=dropout_rate)
+
+    RNN_output = RNN_cell(embedding_inputs)
+
+    # DNN layer
+    outputs = Dense(args.hidden_size//2,
+                    activation='relu',
+                    kernel_regularizer=regularizers.l2(0.1))(RNN_output)
+    outputs = Dropout(dropout_rate)(outputs)
+    outputs = Dense(1, activation='sigmoid')(outputs)
+
+    model =  Model(inputs=inputs,outputs=outputs)
+
+    # optimizer
+    adam = Adam()
+    print ('compile model...')
+
+    # compile model
+    model.compile( loss=args.loss_function, optimizer=adam, metrics=[ 'accuracy',])
+
+    return model
 
 def main():
-    parser = argparse.ArgumentParser(prog='train.py')
-    parser.add_argument('--epoch', type=int, default=5)
-    parser.add_argument('--batch', type=int, default=256)
-    parser.add_argument('--pretrain', type=bool, default=False)
-    parser.add_argument('--model_name', type=str, default='save/model/model-1')
-    parser.add_argument('--which_model', type=int, default=1)
-    parser.add_argument('--which_gpu', type=int, default=0)
-    parser.add_argument('--gpu_fraction', type=float, default=0.9)
+    # limit gpu memory usage
+    def get_session(gpu_fraction):
+        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
+        return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+    K.set_session(get_session(args.gpu_fraction))
 
-    args = parser.parse_args()
+    save_path = os.path.join(args.save_dir,args.model)
+    if args.load_model is not None:
+        load_path = os.path.join(args.save_dir,args.load_model)
 
-    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.which_gpu)
-
-    # gpu limitation
-    from keras.backend.tensorflow_backend import set_session
-    config = tf.ConfigProto()
-    config.gpu_options.per_process_gpu_memory_fraction = args.gpu_fraction
-    set_session(tf.Session(config=config))
-
-    (X_train, y_train), (X_valid, y_valid), embedding_layer = load_data()
-
-    train(
-        args.which_model,
-        X_train,
-        y_train,
-        X_valid,
-        y_valid,
-        args.batch,
-        args.epoch,
-        args.pretrain,
-        args.model_name,
-        embedding_layer
-    )
-
-def prepare_embedding(word_index):
-    embeddings_index = {}
-    files = []
-    files.append(open('data/glove.6B/glove1.txt', 'r'))
-    files.append(open('data/glove.6B/glove2.txt', 'r'))
-    files.append(open('data/glove.6B/glove3.txt', 'r'))
-    files.append(open('data/glove.6B/glove4.txt', 'r'))
-
-    for f in files:
-        for line in f:
-            values = line.split()
-            word = values[0]
-            coefs = np.asarray(values[1:], dtype='float32')
-            embeddings_index[word] = coefs
-        f.close()
-
-    print('Found %s word vectors.' % len(embeddings_index))
-
-    # prepare embedding matrix
-    num_words = min(MAX_NB_WORDS, len(word_index))
-    embedding_matrix = np.zeros((num_words, EMBEDDING_DIM))
-    for word, i in word_index.items():
-        if i >= MAX_NB_WORDS:
-            continue
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            # words not found in embedding index will be all-zeros.
-            embedding_matrix[i] = embedding_vector
-
-    # load pre-trained word embeddings into an Embedding layer
-    # note that we set trainable = False so as to keep the embeddings fixed
-    embedding_layer = Embedding(num_words,
-                            EMBEDDING_DIM,
-                            weights=[embedding_matrix],
-                            input_length=MAX_SEQUENCE_LENGTH,
-                            trainable=False)
-
-#print('Training model.')
-    return embedding_layer
-def load_data():
-        buffer_ = []
-        texts = []
-        labels = []
-        texts_labels = {}
-        with open('data/training_label.txt', 'r') as f:
-            buffer_ = f.read()
-            print(len(buffer_.split('\n')))
-            for line in buffer_.split('\n'):
-                if line == "":
-                    break
-                texts.append(line[10:])
-                labels.append(line[0])
-            #print np.array(texts)
-            #print np.array(labels)
-        tokenizer = Tokenizer(MAX_NB_WORDS)
-        tokenizer.fit_on_texts(texts)
-        sequences = tokenizer.texts_to_sequences(texts)
-
-        word_index = tokenizer.word_index
-        print('Found %s unique tokens.' % len(word_index))
-
-        data = pad_sequences(sequences, maxlen=MAX_SEQUENCE_LENGTH)
-
-        labels = np_utils.to_categorical(np.asarray(labels))
-        print('Shape of data tensor:', data.shape)
-        print('Shape of label tensor:', labels.shape)
-
-        indices = np.arange(data.shape[0])
-        np.random.shuffle(indices)
-        data = data[indices]
-        labels = labels[indices]
-        nb_validation_samples = int(VALIDATION_SPLIT * data.shape[0])
-
-        X_train = data[:-nb_validation_samples]
-        y_train = labels[:-nb_validation_samples]
-        X_valid = data[-nb_validation_samples:]
-        y_valid = labels[-nb_validation_samples:]
-
-        embedding_layer = prepare_embedding(word_index)
-
-        return (X_train, y_train), (X_valid, y_valid), embedding_layer
-
-def train(which_model, X_train, y_train, X_valid, y_valid,
-         n_batch, n_epoch, pretrain, model_name, embedding_layer):
-
-    if pretrain == False:
-        if which_model == 0:
-            model = build_model_0(embedding_layer)
-        elif which_model == 1:
-            model = build_model_1(embedding_layer)
-        elif which_model == 2:
-            model = build_model_2()
+    #####read data#####
+    dm = DataManager()
+    print ('Loading data...')
+    if args.action == 'train':
+        dm.add_data('train_data', train_path, True)
+    elif args.action == 'semi':
+        dm.add_data('train_data', train_path, True)
+        dm.add_data('semi_data', semi_path, False)
     else:
-        model = load_model(model_name)
+        raise Exception ('Implement your testing parser')
 
-    filepath='save/Model.{epoch:02d}-{val_acc:.4f}.hdf5'
-    checkpoint1 = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_best_only=True, mode='max')
-    checkpoint2 = EarlyStopping(monitor='val_loss', min_delta=0, patience=10, verbose=0, mode='auto')
-    callbacks_list = [checkpoint1,checkpoint2]
+    # prepare tokenizer
+    print ('get Tokenizer...')
+    if args.load_model is not None:
+        # read exist tokenizer
+        dm.load_tokenizer(os.path.join(load_path,'token.pk'))
+    else:
+        # create tokenizer on new data
+        dm.tokenize(args.vocab_size)
 
-    history = model.fit(X_train, y_train, batch_size=n_batch, epochs=n_epoch,
-              validation_data=(X_valid, y_valid),
-              callbacks=callbacks_list)
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
+    if not os.path.exists(os.path.join(save_path,'token.pk')):
+        dm.save_tokenizer(os.path.join(save_path,'token.pk'))
 
-    model.save('save/model/' + str(model_name) + '.hdf5')
-    score = model.evaluate(X_valid, y_valid)
-    print ('\nTest Acc:', score[1])
+    # convert to sequences
+    dm.to_sequence(args.max_length)
 
-def build_model_0(embedding_layer):
-    model = Sequential()
-    model.add(embedding_layer)
-    model.add(Flatten())
-    model.add(Dense(2, activation='softmax'))
+    # initial model
+    print ('initial model...')
+    model = simpleRNN(args)
+    print (model.summary())
 
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.summary()
+    if args.load_model is not None:
+        if args.action == 'train':
+            print ('Warning : load a exist model and keep training')
+        path = os.path.join(load_path,'model.h5')
+        if os.path.exists(path):
+            print ('load model from %s' % path)
+            model.load_weights(path)
+        else:
+            raise ValueError("Can't find the file %s" %path)
+    elif args.action == 'test':
+        print ('Warning : testing without loading any model')
 
-    return model
+    # training
+    if args.action == 'train':
+        (X,Y),(X_val,Y_val) = dm.split_data('train_data', args.val_ratio)
+        earlystopping = EarlyStopping(monitor='val_acc', patience = 3, verbose=1, mode='max')
 
-def build_model_1(embedding_layer):
-    model = Sequential()
-    model.add(embedding_layer)
-    model.add(LSTM(256))
-    
-    model.add(Dropout(0.5))
+        save_path = os.path.join(save_path,'model.h5')
+        checkpoint = ModelCheckpoint(filepath=save_path,
+                                     verbose=1,
+                                     save_best_only=True,
+                                     save_weights_only=True,
+                                     monitor='val_acc',
+                                     mode='max' )
+        history = model.fit(X, Y,
+                            validation_data=(X_val, Y_val),
+                            epochs=args.nb_epoch,
+                            batch_size=args.batch_size,
+                            callbacks=[checkpoint, earlystopping] )
 
-    model.add(Dense(2, activation='softmax'))
+    # testing
+    elif args.action == 'test' :
+        raise Exception ('Implement your testing function')
 
+    # semi-supervised training
+    elif args.action == 'semi':
+        (X,Y),(X_val,Y_val) = dm.split_data('train_data', args.val_ratio)
 
-    model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['accuracy'])
-    model.summary()
+        [semi_all_X] = dm.get_data('semi_data')
+        earlystopping = EarlyStopping(monitor='val_acc', patience = 3, verbose=1, mode='max')
 
-    return model
+        save_path = os.path.join(save_path,'model.h5')
+        checkpoint = ModelCheckpoint(filepath=save_path,
+                                     verbose=1,
+                                     save_best_only=True,
+                                     save_weights_only=True,
+                                     monitor='val_acc',
+                                     mode='max' )
+        # repeat 10 times
+        for i in range(10):
+            # label the semi-data
+            semi_pred = model.predict(semi_all_X, batch_size=1024, verbose=True)
+            semi_X, semi_Y = dm.get_semi_data('semi_data', semi_pred, args.threshold, args.loss_function)
+            semi_X = np.concatenate((semi_X, X))
+            semi_Y = np.concatenate((semi_Y, Y))
+            print ('-- iteration %d  semi_data size: %d' %(i+1,len(semi_X)))
+            # train
+            history = model.fit(semi_X, semi_Y,
+                                validation_data=(X_val, Y_val),
+                                epochs=2,
+                                batch_size=args.batch_size,
+                                callbacks=[checkpoint, earlystopping] )
 
-def build_model_2():
-	model = Sequential()
-	model.add(Embedding(MAX_NB_WORDS, 50, input_length = MAX_SEQUENCE_LENGTH))
-	model.add(Conv1D(filters = 32, kernel_size = 3, padding = 'same', activation = 'relu'))
-	model.add(LSTM(128, dropout = 0.2, recurrent_dropout = 0.2))
-	model.add(Dense(2, activation = 'softmax'))
+            if os.path.exists(save_path):
+                print ('load model from %s' % save_path)
+                model.load_weights(save_path)
+            else:
+                raise ValueError("Can't find the file %s" %path)
 
-	model.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['acc'])
-	return model
 if __name__ == '__main__':
-    main()
-
-
-
+        main()
