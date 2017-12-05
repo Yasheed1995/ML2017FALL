@@ -1,10 +1,10 @@
-# Project Title
+# Machine Learning Final Project
 
-One Paragraph of project description goes here
+Listen & Translate
 
 ## Getting Started
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+Given a Taiwanese audio signal, select the most possible Chinese translations from the given options. For more details, please refer to the lecture slides.
 
 ### Prerequisites
 
@@ -14,61 +14,46 @@ What things you need to install the software and how to install them
 Give examples
 ```
 
-### Installing
+### Evaluation Metric
 
-A step by step series of examples that tell you have to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
+The evaluation metric for this competition is accuracy. If there are m correct answers out of N questions, then the accuracy would simply be m / N.
 
 ## Running the tests
 
 Explain how to run the automated tests for this system
 
-### Break down into end to end tests
+## Data Files
 
-Explain what these tests test and why
+Given Files:
+  data.zip [Data]
+  |＿ train.data
+  |＿ train.caption
+  |＿ test.data
+  |＿ test.csv
+  |＿ example_wav.zip
 
-```
-Give an example
-```
 
-### And coding style tests
+### Data Preprocessing
 
-Explain what these tests test and why
+Use Kaldi to extract a series of MFCC feature vectors(39 dim) from audio signal.
 
-```
-Give an example
-```
+### references
 
-## Deployment
+seq2seq
+http://blog.csdn.net/jerr__y/article/details/53749693
 
-Add additional notes about how to deploy this on a live system
+(ML 2017) 
+http://speech.ee.ntu.edu.tw/~tlkagk/courses/ML_2016/Lecture/RNN%20(v2).pdf
+http://cyruschiu.github.io/2017/02/24/learning-Tensoflow-Seq2Seq-for-translate/
 
-## Built With
+Hinge loss
+http://blog.csdn.net/luo123n/article/details/48878759
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
 
 ## Contributing
 
 Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
 
 ## Authors
 
