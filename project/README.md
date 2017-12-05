@@ -40,15 +40,20 @@ Use Kaldi to extract a series of MFCC feature vectors(39 dim) from audio signal.
 ### references
 
 seq2seq
+```
 http://blog.csdn.net/jerr__y/article/details/53749693
+```
 
 (ML 2017) 
+```
 http://speech.ee.ntu.edu.tw/~tlkagk/courses/ML_2016/Lecture/RNN%20(v2).pdf
 http://cyruschiu.github.io/2017/02/24/learning-Tensoflow-Seq2Seq-for-translate/
+```
 
 Hinge loss
+```
 http://blog.csdn.net/luo123n/article/details/48878759
-
+```
 
 ## Contributing
 
