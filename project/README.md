@@ -13,6 +13,11 @@ Git add ignore large files(save your own training data)
 find . -size +90M | sed 's|^\./||g' | cat >> .gitignore; awk '!NF || !seen[$0]++' .gitignore
 ```
 
+Training data download
+```
+https://drive.google.com/open?id=1rqz_-uIrPyVee96H83hGo6KNy9UJt1uB
+```
+
 
 ### Evaluation Metric
 
