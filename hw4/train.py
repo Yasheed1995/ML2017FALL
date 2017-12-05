@@ -14,7 +14,7 @@ from keras.callbacks import EarlyStopping, ModelCheckpoint
 import keras.backend.tensorflow_backend as K
 import tensorflow as tf
 
-from utils.util import DataManager
+from util import DataManager
 
 
 parser = argparse.ArgumentParser(description='Sentiment classification')
