@@ -6,13 +6,13 @@ Listen & Translate
 
 Given a Taiwanese audio signal, select the most possible Chinese translations from the given options. For more details, please refer to the lecture slides.
 
-### Prerequisites
+### NOTES
 
-What things you need to install the software and how to install them
+Git add ignore large files(save your own training data)
+```
+find . -size +90M | sed 's|^\./||g' | cat >> .gitignore; awk '!NF || !seen[$0]++' .gitignore
+```
 
-```
-Give examples
-```
 
 ### Evaluation Metric
 
