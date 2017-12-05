@@ -14,9 +14,33 @@ find . -size +90M | sed 's|^\./||g' | cat >> .gitignore; awk '!NF || !seen[$0]++
 ```
 
 Training data download
-```
+
+
 https://drive.google.com/open?id=1rqz_-uIrPyVee96H83hGo6KNy9UJt1uB
-```
+
+
+Jieba note
+
+
+https://github.com/ldkrsi/jieba-zh_TW
+
+
+Pre-trained wordvec
+
+
+https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
+
+
+Powerpoint
+
+
+https://docs.google.com/presentation/d/1dz4c0CQPBC1CJ7Iy7pcop0L8Ko0EdT0qyqNz1sK_WQo/edit#slide=id.p5
+https://docs.google.com/presentation/d/1bFF5a35awPQpyHAdqu81nEYKJq9lfkF2DhH_LfB0mms/edit#slide=id.g197aa5b1a4_0_72
+
+Kaggle
+
+
+https://www.kaggle.com/c/ml2017fallfinaltaiwanese/data
 
 
 ### Evaluation Metric
