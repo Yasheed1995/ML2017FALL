@@ -61,12 +61,14 @@ def simpleRNN(args):
     # RNN
     return_sequence = False
     dropout_rate = args.dropout_rate
-    if args.cell == 'GRU':
-        RNN_cell = GRU(args.hidden_size,
+
+    for i in range(5):
+        if args.cell == 'GRU':
+            RNN_cell = GRU(args.hidden_size,
                        return_sequences=return_sequence,
                        dropout=dropout_rate)
-    elif args.cell == 'LSTM':
-        RNN_cell = LSTM(args.hidden_size,
+        elif args.cell == 'LSTM':
+            RNN_cell = LSTM(args.hidden_size,
                         return_sequences=return_sequence,
                         dropout=dropout_rate)
 
@@ -164,6 +166,9 @@ def main():
                             batch_size=args.batch_size,
                             callbacks=[checkpoint, earlystopping] )
 
+        dict_history=pd.DataFrame(history.history)
+
+        dict_history.to_csv('save/dict_history.csv')
     # testing
     elif args.action == 'test' :
         raise Exception ('Implement your testing function')
