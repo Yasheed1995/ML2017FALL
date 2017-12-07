@@ -22,6 +22,10 @@ parser = argparse.ArgumentParser(description='Sentiment classification')
 parser.add_argument('model')
 parser.add_argument('action', choices=['train','test','semi'])
 
+parser.add_argument('--train_path', default='data/training_label.txt', type=str)
+parser.add_argument('--test_path', default='data/testing_data.txt', type=str)
+parser.add_argument('--semi_path', default='data/training_nolabel.txt', type=str)
+
 # training argument
 parser.add_argument('--batch_size', default=512, type=float)
 parser.add_argument('--nb_epoch', default=40, type=int)
@@ -43,16 +47,16 @@ parser.add_argument('--threshold', default=0.1,type=float)
 parser.add_argument('--test_y', dest='test_y', type=str, default='npy/1.npy')
 
 # output path for your prediction
-parser.add_argument('--result_path', default='result.csv',)
+parser.add_argument('--result_path', default='result.csv')
 
 # put model in the same directory
 parser.add_argument('--load_model', default = None)
 parser.add_argument('--save_dir', default = 'model/')
 args = parser.parse_args()
 
-train_path = 'data/training_label.txt'
-test_path = 'data/testing_data.txt'
-semi_path = 'data/training_nolabel.txt'
+train_path = args.train_path
+test_path = args.test_path
+semi_path = args.semi_path
 
 # build model
 def simpleRNN(args):
@@ -118,7 +122,7 @@ def main():
     else:
         print ('Implement your testing parser')
         dm.add_data('test_data', test_path, False)
-        
+
 
     # prepare tokenizer
     print ('get Tokenizer...')
