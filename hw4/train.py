@@ -17,11 +17,8 @@ import tensorflow as tf
 from util import DataManager
 import pandas as pd
 import os
-#os.environ["CUDA_VISABLE_DEVICES"]='1'
+os.environ["CUDA_VISABLE_DEVICES"]='0'
 
-if 'session' in locals() and session is not None:
-    print('Close interactive session')
-    session.close()
 
 parser = argparse.ArgumentParser(description='Sentiment classification')
 parser.add_argument('model')
@@ -32,10 +29,10 @@ parser.add_argument('--test_path', default='data/testing_data.txt', type=str)
 parser.add_argument('--semi_path', default='data/training_nolabel.txt', type=str)
 
 # training argument
-parser.add_argument('--batch_size', default=512, type=float)
+parser.add_argument('--batch_size', default=32, type=float)
 parser.add_argument('--nb_epoch', default=40, type=int)
 parser.add_argument('--val_ratio', default=0.1, type=float)
-parser.add_argument('--gpu_fraction', default=0.3, type=float)
+parser.add_argument('--gpu_fraction', default=0.2, type=float)
 parser.add_argument('--vocab_size', default=20000, type=int)
 parser.add_argument('--max_length', default=50,type=int)
 
@@ -65,7 +62,7 @@ semi_path = args.semi_path
 
 # build model
 def simpleRNN(args):
-    inputs = Input(shape=(args.max_length,))
+    inputs = Input(shape=(args.vocab_size,))
 
     # Embedding layer
     embedding_inputs = Embedding(args.vocab_size,
@@ -107,10 +104,15 @@ def simpleRNN(args):
 
 def main():
     # limit gpu memory usage
-    def get_session(gpu_fraction):
-        gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
-        return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
-    K.set_session(get_session(args.gpu_fraction))
+    #def get_session(gpu_fraction):
+    #    gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=gpu_fraction)
+    #    return tf.Session(config=tf.ConfigProto(gpu_options=gpu_options))
+    #K.set_session(get_session(args.gpu_fraction))
+
+    from keras.backend.tensorflow_backend import set_session
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth=True
+    set_session(tf.Session(config=config))
 
     save_path = os.path.join(args.save_dir,args.model)
     if args.load_model is not None:
@@ -143,8 +145,11 @@ def main():
     if not os.path.exists(os.path.join(save_path,'token.pk')):
         dm.save_tokenizer(os.path.join(save_path,'token.pk'))
 
+    # comvert textx to BOW feature
+    dm.to_bow()
     # convert to sequences
-    dm.to_sequence(args.max_length)
+    #dm.to_sequence(args.max_length)
+
 
     # initial model
     print ('initial model...')
@@ -166,6 +171,7 @@ def main():
     # training
     if args.action == 'train':
         (X,Y),(X_val,Y_val) = dm.split_data('train_data', args.val_ratio)
+        print (X)
         earlystopping = EarlyStopping(monitor='val_acc', patience = 3, verbose=1, mode='max')
 
         save_path = os.path.join(save_path,'model.h5')
@@ -183,7 +189,7 @@ def main():
 
         dict_history = pd.DataFrame(history.history)
 
-        dict_history.to_csv('save/dict_history.csv')
+        dict_history.to_csv('save/dict_history_bow.csv')
     # testing
     elif args.action == 'test' :
         print ('Implement your testing function')
