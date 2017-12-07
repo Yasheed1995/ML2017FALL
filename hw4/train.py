@@ -156,7 +156,14 @@ def main():
         else:
             raise ValueError("Can't find the file %s" %path)
     elif args.action == 'test':
-        print ('Warning : testing without loading any model')
+        #print ('Warning : testing without loading any model')
+        path = os.path.join(load_path,'model.h5')
+        if os.path.exists(path):
+            print ('load model from %s' % path)
+            model.load_weights(path)
+        else:
+            raise ValueError("Can't find the file %s" %path)
+
 
     # training
     if args.action == 'train':
@@ -186,10 +193,12 @@ def main():
         #test_y = np.argmax(test_y, axis=1)
         [test_x] = dm.get_data('test_data')
         test_y = model.predict(test_x, batch_size=args.batch_size, verbose=1)
+        print (test_y)
         np.save('test_y' + str(args.dropout_rate) + '.npy', test_y)
         idx = np.array([[j for j in range(len(test_y))]]).T
         print (test_y.shape)
         print (idx.shape)
+        test_y = [[1] if i[0] > 0.5 else [0] for i in test_y ]
         test_y = np.hstack((idx, test_y)).astype(int)
         output = pd.DataFrame(test_y, columns=['id', 'label'])
         output.to_csv(args.result_path, index=False)
