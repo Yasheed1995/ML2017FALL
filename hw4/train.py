@@ -16,7 +16,12 @@ import tensorflow as tf
 
 from util import DataManager
 import pandas as pd
+import os
+#os.environ["CUDA_VISABLE_DEVICES"]='1'
 
+if 'session' in locals() and session is not None:
+    print('Close interactive session')
+    session.close()
 
 parser = argparse.ArgumentParser(description='Sentiment classification')
 parser.add_argument('model')
@@ -30,7 +35,7 @@ parser.add_argument('--semi_path', default='data/training_nolabel.txt', type=str
 parser.add_argument('--batch_size', default=512, type=float)
 parser.add_argument('--nb_epoch', default=40, type=int)
 parser.add_argument('--val_ratio', default=0.1, type=float)
-parser.add_argument('--gpu_fraction', default=0.5, type=float)
+parser.add_argument('--gpu_fraction', default=0.3, type=float)
 parser.add_argument('--vocab_size', default=20000, type=int)
 parser.add_argument('--max_length', default=50,type=int)
 
@@ -156,14 +161,7 @@ def main():
         else:
             raise ValueError("Can't find the file %s" %path)
     elif args.action == 'test':
-        #print ('Warning : testing without loading any model')
-        path = os.path.join(load_path,'model.h5')
-        if os.path.exists(path):
-            print ('load model from %s' % path)
-            model.load_weights(path)
-        else:
-            raise ValueError("Can't find the file %s" %path)
-
+        print ('Warning : testing without loading any model')
 
     # training
     if args.action == 'train':
@@ -192,6 +190,7 @@ def main():
         #test_y = np.load(args.test_y)
         #test_y = np.argmax(test_y, axis=1)
         [test_x] = dm.get_data('test_data')
+        test_x = test_x[1:]
         test_y = model.predict(test_x, batch_size=args.batch_size, verbose=1)
         print (test_y)
         np.save('test_y' + str(args.dropout_rate) + '.npy', test_y)
@@ -201,6 +200,7 @@ def main():
         test_y = [[1] if i[0] > 0.5 else [0] for i in test_y ]
         test_y = np.hstack((idx, test_y)).astype(int)
         output = pd.DataFrame(test_y, columns=['id', 'label'])
+        print (output)
         output.to_csv(args.result_path, index=False)
 
 
