@@ -15,6 +15,7 @@ import keras.backend.tensorflow_backend as K
 import tensorflow as tf
 
 from util import DataManager
+import pandas as pd
 
 
 parser = argparse.ArgumentParser(description='Sentiment classification')
@@ -22,12 +23,12 @@ parser.add_argument('model')
 parser.add_argument('action', choices=['train','test','semi'])
 
 # training argument
-parser.add_argument('--batch_size', default=128, type=float)
-parser.add_argument('--nb_epoch', default=20, type=int)
+parser.add_argument('--batch_size', default=512, type=float)
+parser.add_argument('--nb_epoch', default=40, type=int)
 parser.add_argument('--val_ratio', default=0.1, type=float)
-parser.add_argument('--gpu_fraction', default=0.3, type=float)
+parser.add_argument('--gpu_fraction', default=0.5, type=float)
 parser.add_argument('--vocab_size', default=20000, type=int)
-parser.add_argument('--max_length', default=40,type=int)
+parser.add_argument('--max_length', default=50,type=int)
 
 # model parameter
 parser.add_argument('--loss_function', default='binary_crossentropy')
@@ -37,6 +38,9 @@ parser.add_argument('-hid_siz', '--hidden_size', default=512, type=int)
 parser.add_argument('--dropout_rate', default=0.3, type=float)
 parser.add_argument('-lr','--learning_rate', default=0.001,type=float)
 parser.add_argument('--threshold', default=0.1,type=float)
+
+# for testing
+parser.add_argument('--test_y', dest='test_y', type=str, default='npy/1.npy')
 
 # output path for your prediction
 parser.add_argument('--result_path', default='result.csv',)
@@ -112,7 +116,9 @@ def main():
         dm.add_data('train_data', train_path, True)
         dm.add_data('semi_data', semi_path, False)
     else:
-        raise Exception ('Implement your testing parser')
+        print ('Implement your testing parser')
+        dm.add_data('test_data', test_path, False)
+        
 
     # prepare tokenizer
     print ('get Tokenizer...')
@@ -166,12 +172,24 @@ def main():
                             batch_size=args.batch_size,
                             callbacks=[checkpoint, earlystopping] )
 
-        dict_history=pd.DataFrame(history.history)
+        dict_history = pd.DataFrame(history.history)
 
         dict_history.to_csv('save/dict_history.csv')
     # testing
     elif args.action == 'test' :
-        raise Exception ('Implement your testing function')
+        print ('Implement your testing function')
+        #test_y = np.load(args.test_y)
+        #test_y = np.argmax(test_y, axis=1)
+        [test_x] = dm.get_data('test_data')
+        test_y = model.predict(test_x, batch_size=args.batch_size, verbose=1)
+        np.save('test_y' + str(args.dropout_rate) + '.npy', test_y)
+        idx = np.array([[j for j in range(len(test_y))]]).T
+        print (test_y.shape)
+        print (idx.shape)
+        test_y = np.hstack((idx, test_y)).astype(int)
+        output = pd.DataFrame(test_y, columns=['id', 'label'])
+        output.to_csv(args.result_path, index=False)
+
 
     # semi-supervised training
     elif args.action == 'semi':
