@@ -61,9 +61,9 @@ def main():
 	train_span = (dm.get_data('train_data')['train.span'])
 	
 	
-	print (train_q)
-	l = [jieba.cut(sentence, cut_all=False) for sentence in train_q]
-	for i in l[-1]:
+	print (train_con)
+	l = [jieba.cut(sentence, cut_all=False) for sentence in train_con]
+	for i in l[3]:
 		print (i,)
 		
 	

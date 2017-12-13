@@ -1,10 +1,13 @@
 # Machine Learning Final Project
 
-Listen & Translate
+Delta Chinese QA
+邁向中文問答之路
 
 ## Getting Started
 
-Given a Taiwanese audio signal, select the most possible Chinese translations from the given options. For more details, please refer to the lecture slides.
+Input: A short paragraph and a question
+Output: A segment of paragraph
+
 
 ### NOTES
 
@@ -12,12 +15,6 @@ Git add ignore large files(save your own training data)
 ```
 find . -size +90M | sed 's|^\./||g' | cat >> .gitignore; awk '!NF || !seen[$0]++' .gitignore
 ```
-
-Training data download
-
-
-https://drive.google.com/open?id=1rqz_-uIrPyVee96H83hGo6KNy9UJt1uB
-
 
 Jieba note
 
@@ -31,21 +28,24 @@ Pre-trained wordvec
 https://github.com/facebookresearch/fastText/blob/master/pretrained-vectors.md
 
 
-Powerpoint
-
-
-https://docs.google.com/presentation/d/1dz4c0CQPBC1CJ7Iy7pcop0L8Ko0EdT0qyqNz1sK_WQo/edit#slide=id.p5
-https://docs.google.com/presentation/d/1bFF5a35awPQpyHAdqu81nEYKJq9lfkF2DhH_LfB0mms/edit#slide=id.g197aa5b1a4_0_72
-
 Kaggle
 
 
-https://www.kaggle.com/c/ml2017fallfinaltaiwanese/data
+https://www.kaggle.com/c/ml-2017fall-final-chinese-qa/data
 
 
-### Evaluation Metric
+ppt
 
-The evaluation metric for this competition is accuracy. If there are m correct answers out of N questions, then the accuracy would simply be m / N.
+https://docs.google.com/presentation/d/1WQ2m6CbnCTkgUoDca782GPk9sqnCLxkc-hPxfg8y9p4/edit#slide=id.g29b893c7a1_0_57
+
+
+### Evaluation 
+
+The evaluation metric for this competition is Mean F1-Score. The F1 score, commonly used in information retrieval, measures accuracy using the statistics precision p and recall r. Precision is the ratio of true positives (tp) to all predicted positives (tp + fp). Recall is the ratio of true positives to all actual positives (tp + fn). The F1 score is given by:
+
+F1=2p⋅r/(p+r)  where  p=tp/(tp+fp),  r=tp/(tp+fn)
+
+The F1 metric weights recall and precision equally, and a good retrieval algorithm will maximize both precision and recall simultaneously. Thus, moderately good performance on both will be favored over extremely good performance on one and poor performance on the other.
 
 ## Running the tests
 
@@ -53,18 +53,18 @@ Explain how to run the automated tests for this system
 
 ## Data Files
 
-Given Files:
-  data.zip [Data]
-  |＿ train.data
-  |＿ train.caption
-  |＿ test.data
-  |＿ test.csv
-  |＿ example_wav.zip
+version : String
+Data : Array
+title : String
+paragraphs : Array
+context : String
+qas : Array
+question : String
+id : uuid
+answers : Arrays
+answer_start : int
+text : string
 
-
-### Data Preprocessing
-
-Use Kaldi to extract a series of MFCC feature vectors(39 dim) from audio signal.
 
 ### references
 
@@ -77,11 +77,6 @@ http://blog.csdn.net/jerr__y/article/details/53749693
 
 http://speech.ee.ntu.edu.tw/~tlkagk/courses/ML_2016/Lecture/RNN%20(v2).pdf
 http://cyruschiu.github.io/2017/02/24/learning-Tensoflow-Seq2Seq-for-translate/
-
-
-Hinge loss
-
-http://blog.csdn.net/luo123n/article/details/48878759
 
 
 ## Contributing
