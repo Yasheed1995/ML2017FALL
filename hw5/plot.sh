@@ -1,0 +1,9 @@
+python3 plot.py history
+python3 plot.py history_2
+python3 plot.py history_4
+python3 plot.py history_32
+python3 plot.py history_128
+python3 plot.py history_8192
+python3 plot.py history_1024
+python3 plot.py history_1024_no_bias
+python3 plot.py history_1024_normal
