@@ -71,10 +71,10 @@ print('all genres:\n', all_genres)
 movies_info = np.zeros((max_movieid, 6))
 
 cat1 = ['Action', 'Adventure', 'Western']
-cat2 = ['Animation', "Children's", 'Comedy', 'Romance']
-cat3 = ['Crime', 'Thriller', 'Film-Noir', 'Horror', 'Mystery']
+cat2 = ['Animation', 'Comedy', 'Romance']
+cat3 = ['Crime', 'Thriller', 'Horror', 'Mystery']
 cat4 = ['Documentary', 'War']
-cat5 = ['Drama', 'Musical']
+cat5 = []
 cat6 = ['Fantasy', 'Sci-Fi']
 
 # get one-hot encoding
