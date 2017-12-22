@@ -10,6 +10,7 @@ assert Input and Embedding and LSTM and Dense and Dot and Flatten and Add
 assert Model
 assert np_utils and permutation
 
+
 class DataManager:
     def __init__(self):
         self.data = {}
@@ -149,3 +150,19 @@ class DataManager:
         out = pd.DataFrame(test, columns=['TestDataID', 'Rating'])
         out['TestDataID'] = out['TestDataID'].astype(int)
         out.to_csv(path, index=False)
+
+    def draw(x, y):
+        from matplotlib import pyplot as plt
+        from tsne import bh_sne
+        y = np.array(y)
+        x = np.array(x, dtype=np.float64)
+
+        vis_data = bh_sne(x)
+
+        vis_x = vis_data[:, 0]
+        vis_y = vis_data[:, 1]
+
+        cm = plt.cm.get_cmap('RdYlBu')
+        sc = plt.scatter(vis_x, vis_y, c=y, cmap=cm)
+        plt.colorbar(sc)
+        plt.show()
