@@ -1,0 +1,8 @@
+執行方式: 
+bash TV.sh testing_file_path answer_file path
+套件:
+pandas:0.22.0
+numpy:1.14.0
+jieba:0.39
+opencc-python==0.1.0
+gensim:3.2.0
