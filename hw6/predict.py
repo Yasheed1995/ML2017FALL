@@ -4,7 +4,6 @@ import sys
 sys.path.append("./")
 import numpy as np
 import keras
-assert np and os and tf and set_session
 
 import numpy as np
 from sklearn.decomposition import PCA
